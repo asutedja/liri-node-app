@@ -1,7 +1,10 @@
 var Twitter = require('twitter');
 var inquirer = require("inquirer");
+var continueChat = require("inquirer");
+var request = require('request');
 var Spotify = require('node-spotify-api');
 var keys = require("./keys");
+var omdbRequest = "http://www.omdbapi.com/?apikey=40e9cece&t=";
 
 var client = new Twitter ({
 	consumer_key: keys.twitterKeys.consumer_key,
@@ -17,9 +20,7 @@ var spotify = new Spotify({
 
 function postTweet(msg) {
 	client.post('statuses/update', {status: msg}, function(error, tweet, response) {
-	  if (!error) {
 	    console.log("You posted: " + tweet.text + ". View all tweets at https://twitter.com/thereal_party!");
-	  }
 	});
 
 	client.get('statuses/user_timeline', {screen_name: 'thereal_party'}, function(error, tweet, response) {
@@ -34,15 +35,37 @@ function postTweet(msg) {
 
 function spotifySearch(song) {
 	spotify.search({ type: 'track', query: song }, function(err, data) {
-	  if (err) {
-	    return console.log('Error occurred: ' + err);
-	  }
-	  	
+	  if(data == null) {
+	  	console.log("You mispelled that, or it doesn't exist. Loser.")
+	  } else {
 	 	console.log("Artist: " + data.tracks.items[0].artists[0].name);
 	 	console.log("Song: " + data.tracks.items[0].name);
 	 	console.log("Listen to it here: " + data.tracks.items[0].preview_url);
 		console.log("Album: " + data.tracks.items[0].album.name); 
+	}
 	});
+}
+
+function movieSearch(movie) {
+	request('http://www.omdbapi.com/?apikey=40e9cece&t=' + movie, function (error, response, body) {
+	  var film = JSON.parse(body);
+	  if (film.Title == null) {
+	  	wrong();
+	  } else {
+		  console.log("Title: " + film.Title);
+		  console.log("Year: " + film.Year);
+		  console.log("IMDB Rating: " + film.imdbRating);
+		  console.log("Country: " + film.Country);
+		  console.log("Language: " + film.Language);
+		  console.log("Plot: " + film.Plot);
+		  console.log("Actors: " + film.Actors);
+	  }
+	  // console.log("Rotten Tomatoes Rating: " + film.Ratings[1].Value);
+	});
+}
+
+function wrong() {
+	console.log("You mispelled that, or it doesn't exist. Loser.");
 }
 
 // Create a "Prompt" with a series of questions.
@@ -72,7 +95,24 @@ inquirer
     	postTweet(inquirer.value);
     } else if (inquirer.toDo === "Listen to Tunes") {
 		spotifySearch(inquirer.value);
+    } else if (inquirer.toDo === "Look up a movie") {
+    	movieSearch(inquirer.value);
     } else {
     	console.log("Well... here's something you to look at: ( o )( o )");
+    	continueChat();
     }
   });
+
+function continueChat() {
+  continueChat 
+  	.prompt([
+  		{
+  			type: "input",
+  			message: "This is a test!",
+  			name: "test"
+  		}
+  	])
+  	.then(function(promptResponse) {
+  		console.log(promptResponse);
+  	});
+};
