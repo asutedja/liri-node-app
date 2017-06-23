@@ -4,10 +4,11 @@ var continueChat = require("inquirer");
 var request = require('request');
 var Spotify = require('node-spotify-api');
 var keys = require("./keys");
+var talkingpoints = require("./talkingpoints");
 var omdbRequest = "http://www.omdbapi.com/?apikey=40e9cece&t=";
 var name = "";
 var randomTalk = "";
-var talkingPoints = [
+var convStart = [
 	"Nah, I just wanna talk about FEELINGS", 
 	"Let's Talk :)",
 	"Just wanna shoot the breeze",
@@ -25,10 +26,25 @@ var client = new Twitter ({
 	access_token_secret: keys.twitterKeys.access_token_secret
 });
 
-var spotify = new Spotify({
-  id: "35563073063e418aa3673cc30523cc50",
-  secret: "f568229cd07c483d99097e09d419310e"
-});
+function spotifySearch(song) {
+	var spotify = new Spotify({
+	  id: "35563073063e418aa3673cc30523cc50",
+	  secret: "f568229cd07c483d99097e09d419310e"
+	});
+
+	spotify.search({ type: 'track', query: song }, function(err, data) {
+		if(data == null) {
+		  	wrong();
+		} else {
+			console.log('\n' + "=================================");
+		 	console.log("Artist: " + data.tracks.items[0].artists[0].name);
+		 	console.log("Song: " + data.tracks.items[0].name);
+		 	console.log("Listen to it here: " + data.tracks.items[0].preview_url);
+			console.log("Album: " + data.tracks.items[0].album.name);
+			console.log("=================================" + '\n');
+		}
+	});
+}
 
 function postTweet(msg) {
 	client.post('statuses/update', {status: msg}, function(error, tweet, response) {
@@ -37,38 +53,24 @@ function postTweet(msg) {
 
 	client.get('statuses/user_timeline', {screen_name: 'thereal_party'}, function(error, tweet, response) {
 		if(!error) {
+			console.log('\n' + "=================================");
 			console.log("Your last few tweets:")
-			for (let i = 0; i < 4; i++) {
+			for (let i = 0; i < 10; i++) {
 				console.log(tweet[i].text + " - " + tweet[i].created_at);
 			}
+			console.log("View your tweets at: https://twitter.com/thereal_party")
+			console.log("=================================" + '\n');
 		}
 	});
 }
 
-function spotifySearch(song) {
-	if (cycle >= 1) {
-		console.log("You can't look up music any more!")
-	} else {
-	  spotify.search({ type: 'track', query: song }, function(err, data) {
-		  if(data == null) {
-		  	console.log("You mispelled that, or it doesn't exist. Loser.")
-		  } else {
-		 	console.log("Artist: " + data.tracks.items[0].artists[0].name);
-		 	console.log("Song: " + data.tracks.items[0].name);
-		 	console.log("Listen to it here: " + data.tracks.items[0].preview_url);
-			console.log("Album: " + data.tracks.items[0].album.name); 
-		  }
-	  });
-	}
-	cycle++;
-}
-
 function movieSearch(movie) {
-	request('http://www.omdbapi.com/?apikey=40e9cece&t=' + movie, function (error, response, body) {
+	request(omdbRequest + movie, function (error, response, body) {
 	  var film = JSON.parse(body);
 	  if (film.Title == null) {
 	  	wrong();
 	  } else {
+	  	  console.log('\n' + "=================================");
 		  console.log("Title: " + film.Title);
 		  console.log("Year: " + film.Year);
 		  console.log("IMDB Rating: " + film.imdbRating);
@@ -76,6 +78,7 @@ function movieSearch(movie) {
 		  console.log("Language: " + film.Language);
 		  console.log("Plot: " + film.Plot);
 		  console.log("Actors: " + film.Actors);
+		  console.log("=================================" + '\n');
 	  }
 	});
 }
@@ -84,8 +87,8 @@ function wrong() {
 	console.log("You mispelled that, or it doesn't exist. Loser.");
 }
 
-function randomize() {
-	randomTalk = talkingPoints[Math.floor(Math.random() * talkingPoints.length)];
+function randomize(arg) {
+	randomTalk = arg[Math.floor(Math.random() * arg.length)];
 }
 // Create a "Prompt" with a series of questions.
 inquirer
@@ -104,13 +107,13 @@ inquirer
   });
 
 function switchChat() {
-	randomize();
+	randomize(convStart);
 	continueChat
 		.prompt([
 			{
 				type: "list",
 				message: "You wanna do something cool, or just talk " + name + "?",
-				choices: ["Something Cool", randomTalk],
+				choices: ["Something Cool", randomTalk + '\n'],
 				name: "switch"
 			}
 		])
@@ -172,7 +175,7 @@ function lookUp(msg) {
 			])
 			.then(function(promptResponse) {
 				spotifySearch(promptResponse.tunes);
-				setTimeout(switchChat, 1500);
+				setTimeout(switchChat, 2500);
 			});
 	} else {
 		continueChat
@@ -203,20 +206,48 @@ function justTalk() {
 		var talkInput = promptResponse.talk_about.toLowerCase();
 
 		switch(true) {
-			case talkInput.indexOf("women") != -1:
-				console.log("Yeah, women cause all sorts of problems.");
+			case talkInput.indexOf("women") != -1 || talkInput.indexOf("girls") != -1:
+				randomize(talkingpoints.talkingPoints.women);
+				console.log('\n' + "=================================");
+				console.log(randomTalk);
+				console.log("=================================" + '\n');
 				break;
-			case talkInput.indexOf("kids") != -1:
-				console.log("Yeah, kids suck. No one needs them.");
+			case talkInput.indexOf("kids") != -1 || talkInput.indexOf("child") != -1:
+				randomize(talkingpoints.talkingPoints.kids);
+				console.log('\n' + "=================================");
+				console.log(randomTalk);
+				console.log("=================================" + '\n');
 				break;
-			case talkInput.indexOf("games") != -1:
-				console.log("I really hate games of all kinds.");
+			case talkInput.indexOf("game") != -1:
+				randomize(talkingpoints.talkingPoints.game);
+				console.log('\n' + "=================================");
+				console.log(randomTalk);
+				console.log("=================================" + '\n');
 				break;
-			case talkInput.indexOf("love") != -1:
-				console.log("I am a bot, but I feel like I love you.");
+			case talkInput.indexOf("love") != -1 || talkInput.indexOf("romance") != -1:
+				randomize(talkingpoints.talkingPoints.love);
+				console.log('\n' + "=================================");
+				console.log(randomTalk);
+				console.log("=================================" + '\n');
+				break;
+			case talkInput.indexOf("car") != -1 || talkInput.indexOf("vehicle") != -1:
+				randomize(talkingpoints.talkingPoints.cars);
+				console.log('\n' + "=================================");
+				console.log(randomTalk);
+				console.log("=================================" + '\n');
 				break;
 			default: 
-				console.log("Yeah, can't help you much there...");
+				console.log('\n' + "=================================");
+				console.log("I have nothing to say on that matter, but check this out!");
+				console.log(`%c ________________________________________
+				< Whooooooooooo!!! >
+				 ----------------------------------------
+				        \\   ^__^
+				         \\  (oo)\\_______
+				            (__)\\       )\\/\\
+				                ||----w |
+				                ||     ||`);
+				console.log("=================================" + '\n');
 				break;
 		}
 		setTimeout(switchChat, 500);
