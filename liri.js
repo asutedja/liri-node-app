@@ -39,7 +39,11 @@ function spotifySearch(song) {
 			console.log('\n' + "=================================");
 		 	console.log("Artist: " + data.tracks.items[0].artists[0].name);
 		 	console.log("Song: " + data.tracks.items[0].name);
-		 	console.log("Listen to it here: " + data.tracks.items[0].preview_url);
+		 	if (data.tracks.items[0].preview_url == null) {
+		 		console.log("Track URL not available")
+		 	} else {
+		 		console.log("Listen to it here: " + data.tracks.items[0].preview_url);
+		 	}
 			console.log("Album: " + data.tracks.items[0].album.name);
 			console.log("=================================" + '\n');
 		}
@@ -78,6 +82,11 @@ function movieSearch(movie) {
 		  console.log("Language: " + film.Language);
 		  console.log("Plot: " + film.Plot);
 		  console.log("Actors: " + film.Actors);
+		  if(film.Ratings == null || film.Ratings.length < 2) {
+		  	console.log("Sorry. No reviews available for this film.")
+		  } else {
+		  console.log(film.Ratings[1].Source + ": " + film.Ratings[1].Value);
+		  }
 		  console.log("=================================" + '\n');
 	  }
 	});
@@ -162,7 +171,7 @@ function lookUp(msg) {
 			])
 			.then(function(promptResponse) {
 				postTweet(promptResponse.tweet);
-				setTimeout(switchChat, 500);
+				setTimeout(switchChat, 3000);
 			});
 	} else if (msg === "tunes") {
 		continueChat
@@ -175,7 +184,7 @@ function lookUp(msg) {
 			])
 			.then(function(promptResponse) {
 				spotifySearch(promptResponse.tunes);
-				setTimeout(switchChat, 2500);
+				setTimeout(switchChat, 3000);
 			});
 	} else {
 		continueChat
@@ -188,7 +197,7 @@ function lookUp(msg) {
 			])
 			.then(function(promptResponse) {
 				movieSearch(promptResponse.movie);
-				setTimeout(switchChat, 1500);
+				setTimeout(switchChat, 3000);
 			});
 	}
 }
